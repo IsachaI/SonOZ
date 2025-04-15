@@ -34,15 +34,6 @@
 
     
     fun {PartitionToTimedList Partition}
-        {Flatten Partition default_env}
-    end
-
-    fun {Flatten Partition env}
-        case Partition of nil then nil
-        []H|T {EvalItem H env} + {Flatten T env} end
-    end
-
-    fun {EvalItem item env}
-        %les problemes
+        nil
     end
 end
