@@ -88,8 +88,15 @@ define
    end
 
    proc {TestDuration P2T}
-      skip
+      Original = [note(name:a octave:4 sharp:false duration:1.0 instrument:none)
+                  silence(duration:1.0)]
+      P = [duration(seconds:4.0 Original)]
+      Expected = [note(name:a octave:4 sharp:false duration:2.0 instrument:none)
+                  silence(duration:2.0)]
+   in
+      {AssertEquals {P2T P} Expected "TestDuration: scaling from 2.0 to 4.0"}
    end
+   
 
    proc {TestStretch P2T}
       skip
