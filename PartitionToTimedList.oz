@@ -31,7 +31,12 @@
     end
 
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
+    fun {RepeatNote N A}
+      if N =< 0 then nil
+      else A | {RepeatNote N-1 A}
+      end
+   end
+   
     
 fun {PartitionToTimedList Partition}
    case Partition
@@ -48,6 +53,33 @@ fun {PartitionToTimedList Partition}
             Flat = {PartitionToTimedList P}
          in
             {ScalePartition D Flat}
+         [] stretch(factor:F P) then
+            Flat = {PartitionToTimedList P}
+         in
+            {Map Flat
+             fun {$ E}
+                {ScaleElement E F}
+             end}
+         [] drone(note:N amount:A) then
+            One = case N of _|_ then [{Map N NoteToExtended}]
+                           [] _ then [{NoteToExtended N}]
+                  end
+         in
+            {RepeatNote A One}
+         [] mute(amount:A) then
+            {RepeatNote A [silence(duration:1.0)]}
+            
+         [] transpose(semitones:S P) then
+            Flat = {PartitionToTimedList P}
+         in
+            {Map Flat
+             fun {$ E}
+                case E
+                of note(...) then {TransposeNote E S}
+                [] silence(duration:_) then E
+                [] Chord then {Map Chord fun {$ N} {TransposeNote N S} end}
+                end
+             end}   
          [] _ then [{NoteToExtended H}]
          end
    in
@@ -101,4 +133,18 @@ in
          {ScaleElement E Scaling}
       end}
 end
+
+
+fun {TransposeNote Note Semitones}
+   case Note
+   of note(name:N octave:O sharp:S duration:D instrument:I) then
+      note(name:N octave:O+Semitones sharp:S duration:D instrument:I)
+   [] silence(duration:D) then
+      silence(duration:D)
+   [] Notes then
+      {Map Notes fun {$ N} {TransposeNote N Semitones} end}
+   end
+end
+
+
 end
