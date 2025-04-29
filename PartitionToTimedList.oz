@@ -30,10 +30,25 @@
         end
     end
 
+    %Tune = [b b c5 d5 d5 c5 b a g g a b]
+    %End1 = [stretch(factor:1.5 [b]) stretch(factor:0.5 [a]) stretch(factor:2.0 [a])]
+    %End2 = [stretch(factor:1.5 [a]) stretch(factor:0.5 [g]) stretch(factor:2.0 [g])]
+    %Interlude = [a a b g a stretch(factor:0.5 [b c5])
+    %                 b g a stretch(factor:0.5 [b c5])
+    %             b a g a stretch(factor:2.0 [d]) ]
+ 
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-    
     fun {PartitionToTimedList Partition}
-        nil
+        {Flatten Partition default_env}
+    end
+
+    fun {Flatten Partition env}
+        case Partition of nil then nil
+        []Item|Rest {EvalItem Item env} + {Flatten Rest env} end
+    end
+
+    fun {EvalItem item env}
+        %les problemes
     end
 end
