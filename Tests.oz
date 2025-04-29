@@ -39,6 +39,12 @@ define
          PassedTests := @PassedTests + 1
       end
    end
+   fun {RepeatNote N A}
+      if N =< 0 then nil
+      else A | {RepeatNote N-1 A}
+      end
+   end
+   
 
    fun {NoteToExtended Note}
       case Note
@@ -88,24 +94,67 @@ define
    end
 
    proc {TestDuration P2T}
-      skip
+      Original = [note(name:a octave:4 sharp:false duration:1.0 instrument:none)
+                  silence(duration:1.0)]
+      P = [duration(seconds:4.0 Original)]
+      Expected = [note(name:a octave:4 sharp:false duration:2.0 instrument:none)
+                  silence(duration:2.0)]
+   in
+      {AssertEquals {P2T P} Expected "TestDuration: scaling from 2.0 to 4.0"}
    end
+   
 
    proc {TestStretch P2T}
-      skip
+      Original = [note(name:c octave:4 sharp:false duration:1.0 instrument:none)
+                  silence(duration:2.0)]
+      P = [stretch(factor:0.5 Original)]
+      Expected = [note(name:c octave:4 sharp:false duration:0.5 instrument:none)
+                  silence(duration:1.0)]
+   in
+      {AssertEquals {P2T P} Expected "TestStretch: factor 0.5"}
    end
+   
 
-   proc {TestDrone P2T}
-      skip
+   proc {TestDroneNote P2T}
+      P = [drone(note: c amount: 3)]
+      E = {RepeatNote 3 note(name: c octave: 4 sharp: false duration: 1.0 instrument: none)}
+
+   in
+      {AssertEquals {P2T P} E "TestDrone: single note"}
    end
+   
+   proc {TestDroneChord P2T}
+      C = [drone(note: [c e g] amount: 2)]
+      EC = {RepeatNote 2
+            [note(name: c octave: 4 sharp: false duration: 1.0 instrument: none)
+              note(name: e octave: 4 sharp: false duration: 1.0 instrument: none)
+              note(name: g octave: 4 sharp: false duration: 1.0 instrument: none)]}
+   in
+      {AssertEquals {P2T C} EC "TestDrone: chord"}
+   end
+   
+   proc {TestDrone P2T}
+      {TestDroneNote P2T}
+      {TestDroneChord P2T}
+   end
+   
+   
 
    proc {TestMute P2T}
-      skip
+      E = {RepeatNote 3 [silence(duration:1.0)]}
+   in
+      {AssertEquals {P2T [mute(amount:3)]} E "TestMute: 3 silences"}
    end
+   
 
    proc {TestTranspose P2T}
-      skip
+      In = [transpose(semitones:1 [a])]
+      E = [note(name: a octave: 4 sharp: true duration: 1.0 instrument: none)]
+
+   in
+      {AssertEquals {P2T In} E "TestTranspose: A → A#"}
    end
+   
 
    proc {TestP2TChaining P2T}
       skip

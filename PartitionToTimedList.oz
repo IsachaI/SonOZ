@@ -1,4 +1,3 @@
- 
  functor
  import
     Project2025
@@ -38,17 +37,118 @@
     %             b a g a stretch(factor:2.0 [d]) ]
  
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    fun {RepeatNote N A}
+      if N =< 0 then nil
+      else A | {RepeatNote N-1 A}
+      end
+   end
+   
+    
+fun {PartitionToTimedList Partition}
+   case Partition
+   of nil then nil
+   [] H|T then
+      FlatHead =  case H
+         of note(...) then [H]  
+         [] silence(duration: _) then [H]
+         [] silence then [{NoteToExtended H}] 
+         [] _|_ then 
+            [{Map H NoteToExtended}]  
+         [] duration(seconds:D P) then
+           
+            Flat = {PartitionToTimedList P}
+         in
+            {ScalePartition D Flat}
+         [] stretch(factor:F P) then
+            Flat = {PartitionToTimedList P}
+         in
+            {Map Flat
+             fun {$ E}
+                {ScaleElement E F}
+             end}
+         [] drone(note:N amount:A) then
+            One = case N of _|_ then [{Map N NoteToExtended}]
+                           [] _ then [{NoteToExtended N}]
+                  end
+         in
+            {RepeatNote A One}
+         [] mute(amount:A) then
+            {RepeatNote A [silence(duration:1.0)]}
+            
+         [] transpose(semitones:S P) then
+            Flat = {PartitionToTimedList P}
+         in
+            {Map Flat
+             fun {$ E}
+                case E
+                of note(...) then {TransposeNote E S}
+                [] silence(duration:_) then E
+                [] Chord then {Map Chord fun {$ N} {TransposeNote N S} end}
+                end
+             end}   
+         [] _ then [{NoteToExtended H}]
+         end
+   in
+      {Append FlatHead {PartitionToTimedList T}}
+   end
+end
 
-    fun {PartitionToTimedList Partition}
-        {Flatten Partition default_env}
-    end
+fun {GetDuration Element}
+   case Element
+   of note(duration:D ...) then D
+   [] silence(duration:D) then D
+   [] Notes then
+      % Accord : on prend la durée la plus longue
+      {FoldL Notes
+         fun {$ Max N}
+            D = {GetDuration N}
+         in
+            if D > Max then D else Max end
+         end 0.0}
+   end
+end
 
-    fun {Flatten Partition env}
-        case Partition of nil then nil
-        []Item|Rest {EvalItem Item env} + {Flatten Rest env} end
-    end
+fun {TotalDuration Partition}
+   case Partition
+   of nil then 0.0
+   [] H|T then
+      {GetDuration H} + {TotalDuration T}
+   end
+end
 
-    fun {EvalItem item env}
-        %les problemes
-    end
+fun {ScaleElement Element Factor}
+   case Element
+   of note(duration:D name:N octave:O sharp:S instrument:I) then
+      note(duration:D * Factor name:N octave:O sharp:S instrument:I)
+   [] silence(duration:D) then
+      silence(duration:D * Factor)
+   [] Notes then
+      {Map Notes 
+         fun {$ N}
+            {ScaleElement N Factor}
+         end}
+   end
+end
+
+fun {ScalePartition DurationSeconds Partition}
+   Total = {TotalDuration Partition}
+   Scaling = DurationSeconds / Total
+in
+   {Map Partition
+      fun {$ E}
+         {ScaleElement E Scaling}
+      end}
+end
+
+
+fun {TransposeNote Note Semitones}
+   case Note
+   of note(name:N octave:O sharp:S duration:D instrument:I) then
+      note(name:N octave:O+Semitones sharp:S duration:D instrument:I)
+   [] silence(duration:D) then
+      silence(duration:D)
+   [] Notes then
+      {Map Notes fun {$ N} {TransposeNote N Semitones} end}
+   end
+end
 end
