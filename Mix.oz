@@ -15,7 +15,7 @@
 
     fun {Mix P2T Music}
         % TODO
-        {Project2025.readFile CWD#'wave/animals/cow.wav'}
+        {Project2025.readFile CWD#'wave/animals/cat.wav'}
     end
 
 end

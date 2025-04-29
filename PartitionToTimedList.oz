@@ -1,4 +1,3 @@
- 
  functor
  import
     Project2025
@@ -30,6 +29,13 @@
         end
     end
 
+    %Tune = [b b c5 d5 d5 c5 b a g g a b]
+    %End1 = [stretch(factor:1.5 [b]) stretch(factor:0.5 [a]) stretch(factor:2.0 [a])]
+    %End2 = [stretch(factor:1.5 [a]) stretch(factor:0.5 [g]) stretch(factor:2.0 [g])]
+    %Interlude = [a a b g a stretch(factor:0.5 [b c5])
+    %                 b g a stretch(factor:0.5 [b c5])
+    %             b a g a stretch(factor:2.0 [d]) ]
+ 
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     fun {RepeatNote N A}
       if N =< 0 then nil
@@ -145,6 +151,4 @@ fun {TransposeNote Note Semitones}
       {Map Notes fun {$ N} {TransposeNote N Semitones} end}
    end
 end
-
-
 end
