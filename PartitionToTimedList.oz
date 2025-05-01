@@ -38,10 +38,18 @@
  
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     fun {RepeatNote N A}
-      if N =< 0 then nil
-      else A | {RepeatNote N-1 A}
+      C = {NewCell nil}
+      proc {Loop I}
+         if I > 0 then
+            C := A | @C
+            {Loop I - 1}
+         end
       end
+   in
+      {Loop N}
+      {Reverse @C}
    end
+   
    
     
 fun {PartitionToTimedList Partition}
