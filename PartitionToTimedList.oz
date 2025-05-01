@@ -142,13 +142,43 @@ end
 
 
 fun {TransposeNote Note Semitones}
+   SemitoneTable = [c#false c#true d#false d#true e#false f#false f#true g#false g#true a#false a#true b#false]
+in
    case Note
    of note(name:N octave:O sharp:S duration:D instrument:I) then
-      note(name:N octave:O+Semitones sharp:S duration:D instrument:I)
+      Index =  case N#S
+         of c#false then 0
+         [] c#true then 1
+         [] d#false then 2
+         [] d#true then 3
+         [] e#false then 4
+         [] f#false then 5
+         [] f#true then 6
+         [] g#false then 7
+         [] g#true then 8
+         [] a#false then 9
+         [] a#true then 10
+         [] b#false then 11
+         end
+
+      NewIndex = Index + Semitones
+      FinalIndex = NewIndex mod 12
+      NewOctave = O + (NewIndex div 12)
+
+      NewName#NewSharp = {List.nth SemitoneTable FinalIndex + 1}
+   in
+      note(name:NewName
+           octave:NewOctave
+           sharp:NewSharp
+           duration:D
+           instrument:I)
+
    [] silence(duration:D) then
       silence(duration:D)
+
    [] Notes then
       {Map Notes fun {$ N} {TransposeNote N Semitones} end}
    end
 end
+
 end
