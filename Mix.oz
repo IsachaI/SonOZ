@@ -68,7 +68,7 @@ define
    end
 
    %Additione les valeurs de chaque élément un a un
-   fun {MergeSignals Signals}
+   fun {MergeSignals Signals} %aide externe pour cette fonction
       fun {Sum L1 L2}
          case L1#L2 of
             nil#nil then nil
@@ -132,7 +132,7 @@ define
             Echoed = {ScaleSignal DecayFactor Music}
             Delayed = {Append {Silence D * N} Echoed}
          in
-            Delayed | {GenerateEchoes N-1}
+            Delayed | {GenerateEchoes N-1}   %Aide externe pour la restructuration de la fonction
          end
       end
       AllSignals = Music | {GenerateEchoes R-1}
@@ -239,7 +239,7 @@ define
       end
    end
 
-   fun {Assoc Key Table}
+   fun {Assoc Key Table} %Aide externe
       case Table of nil then nil
       [] K#V|Rest then
          if Key==K then V

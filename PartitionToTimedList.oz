@@ -142,7 +142,7 @@ in
 end
 
 
-fun {TransposeNote Note Semitones}
+fun {TransposeNote Note Semitones} %Aide externe
    SemitoneTable = [c#false c#true d#false d#true e#false f#false f#true g#false g#true a#false a#true b#false]
 in
    case Note
