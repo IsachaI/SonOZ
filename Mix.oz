@@ -16,7 +16,7 @@ define
          HeadSample = {MixPart P2T H}
          TailSamples = {Mix P2T T}
       in
-         {Append HeadSample TailSamples}
+         {Append HeadSample TailSamples} 
       end
    end
 
@@ -25,7 +25,7 @@ define
       case Part of samples(S) then S
 
       []partition(P) then
-         {SampleCalc P2T}
+         {SampleCalc {P2T P}}
 
       []wave(Filename) then
          {Project2025.load Filename}
@@ -95,10 +95,9 @@ define
    fun {LoopMusic Music D}
       SPS = 44100
       TS = D * SPS
-      Signal = {SampleCalc Music}
 
       fun {RepeatMax Acc}
-         Full = {Append Acc Signal}
+         Full = {Append Acc Music}
       in
          if {Length Full} >= TS then Full
          else {RepeatMax Full}
@@ -123,7 +122,6 @@ define
 
    %Echo ajoute un echo a la musique
    fun {EchoMusic D Dec R Music}
-      Signal = {SampleCalc Music}
       SPS = 44100
       DelaySamples = {FloatToInt D * SPS}
 
@@ -131,13 +129,13 @@ define
          if N == 0 then nil
          else
             DecayFactor = {Pow Dec N}
-            Echoed = {ScaleSignal DecayFactor Signal}
+            Echoed = {ScaleSignal DecayFactor Music}
             Delayed = {Append {Silence D * N} Echoed}
          in
             Delayed | {GenerateEchoes N-1}
          end
       end
-      AllSignals = Signal | {GenerateEchoes R-1}
+      AllSignals = Music | {GenerateEchoes R-1}
    in
       {MergeSignals AllSignals}
    end  
@@ -152,7 +150,8 @@ define
          case L of nil then nil
          []H|T then 
             if I < Start then F = {IntToFloat I} / {IntToFloat Start}
-            elseif I >= Len - Finish then F = {IntToFloat (Len - I)} / {IntToFloat Finish}
+            elseif I >= Len - Finish then 
+               F = {IntToFloat (Len - I)} / {IntToFloat Finish}
             else
                F = 1.0
             end
@@ -211,8 +210,8 @@ define
       in
          case Note of
             note(duration:D instrument:_ name:N octave:O sharp:S) then 
-               Semi = {List.assoc NameToSemi N}
-               RealSemi = Semi - 9 + 12 * (O - 4) + (if S then 1 else 0 end)
+               Semi = {IntToFloat{Assoc N NameToSemi}}
+               RealSemi = Semi - 9.0 + 12.0 * ({IntToFloat O} - 4.0) + (if S then 1.0 else 0.0 end)
                Freq = BaseFreq * {Pow 2.0 (RealSemi / 12.0)}
                Len = {FloatToInt D * SampleRate}
                fun {Gen I}
@@ -239,4 +238,15 @@ define
          end
       end
    end
+
+   fun {Assoc Key Table}
+      case Table of nil then nil
+      [] K#V|Rest then
+         if Key==K then V
+         else 
+            {Assoc Key Rest}
+         end
+      end
+   end
+
 end
