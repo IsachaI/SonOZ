@@ -11,28 +11,13 @@ define
    CWD = {Atom.toString {OS.getCWD}}#"/"
 
    fun {Mix P2T Music}
-      case P2T of
-         nil then nil
-      [] _ then
-         {SampleCalc P2T}
-      else {MixPart P2T Music}
-      end
-   end
-
-   fun {SampleCalc P2T}
-      case P2T of
+      case Music of
          nil then nil
       [] H|T then
-         Sample1 = {NoteToSample H}
-         RestSample = {SampleCalc T}
+         HeadSample = {MixPart P2T H}
+         TailSamples = {Mix P2T T}
       in
-         {Append Sample1 RestSample}
-      case Music of nil then nil
-      [] Part|Rest then
-         PartSamples = {MixPart P2T Part}
-         RestSamples = {Mix P2T Rest}
-      in
-         {Append PartSamples RestSamples}
+         HeadSample ++ TailSamples
       end
    end
 
@@ -59,13 +44,13 @@ define
          {ClipMusic L H {Mix P2T M}}
 
       []echo(delay:D decay:Dec repeat:R M) then
-         {EchoMusic D Rec R {Mix P2T M}}
+         {EchoMusic D Dec R {Mix P2T M}}
 
       []fade(start:S finish:F M) then 
-         {FadeMusic S F {Mix PT M}}
+         {FadeMusic S F {Mix PT2 M}}
 
       []cut(start:S finish:F M) then
-         {CutMusic S F {Mix PT M}}
+         {CutMusic S F {Mix P2T M}}
       end
    end
 
@@ -107,9 +92,96 @@ define
       end
    end
 
-   fun {LoopMusic D Music}
+   %Répète la musique pour une durée D (en secondes)
+   fun {LoopMusic Music D}
+      SPS = 44100
+      TS = D * SPS
+      Signal = {Mix Music}
 
+      fun {RepeatMax Acc}
+         Full = Acc ++ Signal
+      in
+         if {Length Full} >= TS then Full
+         else {RepeatMax Full}
+         end
+      end
+      FullSignal = {RepeatMax nil}
+   in 
+      {List.take FullSignal TS}
+   end
+
+   %Clip agit en tant que Equalizer, elle réstreint certaine fréquence
+   fun {ClipMusic Low High Music}
+      fun {ClipSample S}
+         if S < Low then Low
+         elseif S > High then High
+         else S
+         end
+      end
+   in
+      {Map Music ClipSample}
+   end
+
+   %Echo ajoute un echo a la musique
+   fun {EchoMusic D Dec R Music}
+      Signal : {Mix Music}
+      SPS = 44100
+      DelaySamples = {FloatToInt D * SPS}
+
+      fun {GenerateEchoes N}
+         if N == 0 then nil
+         else
+            DecayFactor = {Pow Dec N}
+            Echoed = {ScaleSignal DecayFactor Signal}
+            Delayed = {Silence D * N} ++ Echoed
+         in
+            Delayed | {GenerateEchoes N-1}
+         end
+      end
+      AllSignals = Base | {GenerateEchoes N-1}
+   in
+      {MergeSignals AllSignals}
+   end      
+
+   fun {FadeMusic S F Music}
+      SPS = 44100.0
+      Start = {FloatToInt S * SPS}
+      Finish = {FloatToInt F * SPS}
+      Len = {Length Music}
+
+      fun {Fade L I}
+         case L of nil then nil
+         []H|T then 
+            if I < Start then F = {IntToFloat}/{IntToFloat Start}
+            elseif I >= Len - Finish then F = {IntToFloat (Len - I)}/{IntToFloat Finish}
+            else
+               F = 1.0
+            end
+         in
+            (H * F)|{Fade T I+1}
+         end
+      end
+   in
+      {Fade Music 0}
+   end
    
+   %Crée un silence de X secondes
+   fun {Silence Seconds}
+      SPS = 44100
+      Length = {Float.toInt Seconds * SamplesPerSecond}
+   in
+      {List.make Length 0}
+   end
+
+   fun {SampleCalc P2T}
+      case P2T of
+         nil then nil
+      [] H|T then
+         Sample1 = {NoteToSample H}
+         RestSample = {SampleCalc T}
+      in
+         {Append Sample1 RestSample}
+   end
 
    fun {NoteToSample Note}
       local
