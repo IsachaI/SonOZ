@@ -25,7 +25,7 @@ define
         {Tests.test Mix.mix PartitionToTimedList.partitionToTimedList}
     else
         % Calls your code, prints the result and outputs the result to `out.wav`.
-        {System.show {Project2025.run Mix.mix PartitionToTimedList.partitionToTimedList Music 'out.wav'}}
+        %{System.show {Project2025.run Mix.mix PartitionToTimedList.partitionToTimedList Music 'out.wav'}}
 
         % Launch only ParitionToTimedList. Uncomment me to test and use System.show in PartitionToTimedList (REMOVE ME for submission !)
         %local PartMusic in

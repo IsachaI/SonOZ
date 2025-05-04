@@ -4,7 +4,6 @@ import
    OS
    System
    Property
-   PartitionToTimedList
 export
    mix:Mix
 define
@@ -17,7 +16,7 @@ define
          HeadSample = {MixPart P2T H}
          TailSamples = {Mix P2T T}
       in
-         HeadSample ++ TailSamples
+         {Append HeadSample TailSamples}
       end
    end
 
@@ -25,16 +24,16 @@ define
    fun {MixPart P2T Part}
       case Part of samples(S) then S
 
-      [] partition(P) then
-         {SampleCalc {ParitionToTimedList.ParitionToTimedList P}}
+      []partition(P) then
+         {SampleCalc P2T}
 
-      [] wave(Fileneme) then
+      []wave(Filename) then
          {Project2025.load Filename}
       
       []merge(L) then 
          {MergeMusic P2T L}
 
-      [] repeat(amount:A M) then
+      []repeat(amount:A M) then
          {RepeatMusic A {Mix P2T M}}
 
       []loop(duration:D M) then
@@ -47,7 +46,7 @@ define
          {EchoMusic D Dec R {Mix P2T M}}
 
       []fade(start:S finish:F M) then 
-         {FadeMusic S F {Mix PT2 M}}
+         {FadeMusic S F {Mix P2T M}}
 
       []cut(start:S finish:F M) then
          {CutMusic S F {Mix P2T M}}
@@ -64,7 +63,7 @@ define
    %ScaleSignal multiplie chaque Sample par un facteur
    fun {ScaleSignal Factor Signal}
       case Signal of nil then nil
-      [] X|Xs then (X*Factor)|{ScaleSignal Factor Xs}
+      [] H|T then (H*Factor)|{ScaleSignal Factor T}
       end
    end
 
@@ -81,14 +80,14 @@ define
    in
       case Signals of
          nil then nil
-      [] S|Ss then {FoldL Ss S Sum}
+      [] H|T then {FoldL T H Sum}
       end
    end
    
    %Repeat la musique N fois
    fun {RepeatMusic N Music}
-      if N <= 0 then nil
-      else {Append Music {RepeatMusic N-1 Music}}
+      if N =< 0 then nil
+      else {Append Music {RepeatMusic (N-1) Music}}
       end
    end
 
@@ -96,10 +95,10 @@ define
    fun {LoopMusic Music D}
       SPS = 44100
       TS = D * SPS
-      Signal = {Mix Music}
+      Signal = {SampleCalc Music}
 
       fun {RepeatMax Acc}
-         Full = Acc ++ Signal
+         Full = {Append Acc Signal}
       in
          if {Length Full} >= TS then Full
          else {RepeatMax Full}
@@ -124,7 +123,7 @@ define
 
    %Echo ajoute un echo a la musique
    fun {EchoMusic D Dec R Music}
-      Signal : {Mix Music}
+      Signal = {SampleCalc Music}
       SPS = 44100
       DelaySamples = {FloatToInt D * SPS}
 
@@ -133,15 +132,15 @@ define
          else
             DecayFactor = {Pow Dec N}
             Echoed = {ScaleSignal DecayFactor Signal}
-            Delayed = {Silence D * N} ++ Echoed
+            Delayed = {Append {Silence D * N} Echoed}
          in
             Delayed | {GenerateEchoes N-1}
          end
       end
-      AllSignals = Base | {GenerateEchoes N-1}
+      AllSignals = Signal | {GenerateEchoes R-1}
    in
       {MergeSignals AllSignals}
-   end      
+   end  
 
    fun {FadeMusic S F Music}
       SPS = 44100.0
@@ -152,7 +151,7 @@ define
       fun {Fade L I}
          case L of nil then nil
          []H|T then 
-            if I < Start then F = {IntToFloat} / {IntToFloat Start}
+            if I < Start then F = {IntToFloat I} / {IntToFloat Start}
             elseif I >= Len - Finish then F = {IntToFloat (Len - I)} / {IntToFloat Finish}
             else
                F = 1.0
@@ -188,19 +187,19 @@ define
    %Crée un silence de X secondes
    fun {Silence Seconds}
       SPS = 44100
-      Length = {Float.toInt Seconds * SamplesPerSecond}
+      Length = {Float.toInt Seconds * SPS}
    in
       {List.make Length 0}
    end
 
    fun {SampleCalc P2T}
-      case P2T of
-         nil then nil
+      case P2T of nil then nil
       [] H|T then
          Sample1 = {NoteToSample H}
          RestSample = {SampleCalc T}
       in
          {Append Sample1 RestSample}
+      end
    end
 
    fun {NoteToSample Note}
