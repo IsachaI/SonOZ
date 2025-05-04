@@ -14,7 +14,7 @@ define
     
     % Get the arguments of the program. By default tests are set to false and music is "joy.dj.oz"
     Args = {Application.getArgs record('test'(single type:bool default:false optional:true)
-                                        'music'(single type:string default:'joy.dj.oz')
+                                        'music'(single type:string default:'example.dj.oz')
                                         )}
     
     % Load the music
@@ -28,10 +28,10 @@ define
         {System.show {Project2025.run Mix.mix PartitionToTimedList.partitionToTimedList Music 'out.wav'}}
 
         % Launch only ParitionToTimedList. Uncomment me to test and use System.show in PartitionToTimedList (REMOVE ME for submission !)
-        % local PartMusic in
-        %     [partition(PartMusic)] = Music
-        %     {System.show {PartitionToTimedList.partitionToTimedList PartMusic}}
-        % end
+         local PartMusic in
+             [partition(PartMusic)] = Music
+             {System.show {PartitionToTimedList.partitionToTimedList PartMusic}}
+         end
 
         % Launch only Mix. Uncomment me to test and use System.show in Mix (REMOVE ME for submission !)
         % {System.show {Mix.mix PartitionToTimedList.partitionToTimedList Music}}
