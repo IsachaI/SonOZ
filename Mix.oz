@@ -152,8 +152,8 @@ define
       fun {Fade L I}
          case L of nil then nil
          []H|T then 
-            if I < Start then F = {IntToFloat}/{IntToFloat Start}
-            elseif I >= Len - Finish then F = {IntToFloat (Len - I)}/{IntToFloat Finish}
+            if I < Start then F = {IntToFloat} / {IntToFloat Start}
+            elseif I >= Len - Finish then F = {IntToFloat (Len - I)} / {IntToFloat Finish}
             else
                F = 1.0
             end
@@ -163,6 +163,26 @@ define
       end
    in
       {Fade Music 0}
+   end
+
+   fun {CutMusic S F Music}
+      SPS = 44100.0
+      Start = {FloatToInt (S * SPS)}
+      End = {FloatToInt (F * SPS)}
+      Len = {Length Music}
+
+      fun {Cut I}
+         if I >= End then nil
+         else
+            Sample = if I < Len then {List.nth Music I+1}
+            else
+               0.0
+            end
+         in Sample | {Cut I+1}
+         end
+      end
+   in
+      {Cut Start}
    end
    
    %Crée un silence de X secondes
